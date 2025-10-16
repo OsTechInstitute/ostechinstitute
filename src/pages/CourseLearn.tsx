@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, CheckCircle, PlayCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, CheckCircle, PlayCircle, ChevronLeft, ChevronRight, Award } from "lucide-react";
+import { QuizCard } from "@/components/QuizCard";
+import { generateCertificate } from "@/utils/certificateGenerator";
 
 interface Lesson {
   id: string;
@@ -19,6 +21,23 @@ interface Lesson {
 interface Course {
   id: string;
   title: string;
+  instructor_name: string;
+}
+
+interface Quiz {
+  id: string;
+  title: string;
+  description: string;
+  passing_score: number;
+  lesson_id: string;
+}
+
+interface QuizQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  correct_answer: string;
+  order_index: number;
 }
 
 const CourseLearn = () => {
@@ -30,6 +49,10 @@ const CourseLearn = () => {
   const [completedLessons, setCompletedLessons] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
+  const [showQuiz, setShowQuiz] = useState(false);
+  const [currentQuiz, setCurrentQuiz] = useState<Quiz | null>(null);
+  const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
+  const [hasCertificate, setHasCertificate] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -55,7 +78,7 @@ const CourseLearn = () => {
 
       const { data: courseData } = await supabase
         .from("courses")
-        .select("id, title")
+        .select("id, title, instructor_name")
         .eq("id", id)
         .single();
 
@@ -83,6 +106,15 @@ const CourseLearn = () => {
         setCompletedLessons(new Set(progressData.map((p) => p.lesson_id)));
       }
 
+      const { data: certificateData } = await supabase
+        .from("certificates")
+        .select("id")
+        .eq("user_id", session.user.id)
+        .eq("course_id", id)
+        .maybeSingle();
+
+      setHasCertificate(!!certificateData);
+
       setLoading(false);
     };
 
@@ -104,6 +136,67 @@ const CourseLearn = () => {
     if (!error) {
       setCompletedLessons((prev) => new Set([...prev, lessonId]));
       toast.success("Lesson marked as complete!");
+
+      const { data: quizData } = await supabase
+        .from("quizzes")
+        .select("*")
+        .eq("lesson_id", lessonId)
+        .maybeSingle();
+
+      if (quizData) {
+        const { data: questionsData } = await supabase
+          .from("quiz_questions")
+          .select("*")
+          .eq("quiz_id", quizData.id)
+          .order("order_index");
+
+        if (questionsData && questionsData.length > 0) {
+          setCurrentQuiz(quizData);
+          setQuizQuestions(questionsData.map(q => ({
+            ...q,
+            options: Array.isArray(q.options) ? q.options as string[] : []
+          })));
+          setShowQuiz(true);
+        }
+      }
+    }
+  };
+
+  const handleQuizComplete = async (score: number, answers: Record<string, string>) => {
+    if (!user || !currentQuiz) return;
+
+    await supabase.from("user_quiz_attempts").insert({
+      user_id: user.id,
+      quiz_id: currentQuiz.id,
+      score,
+      answers,
+    });
+
+    setShowQuiz(false);
+
+    if (score >= currentQuiz.passing_score) {
+      const allLessonsCompleted = lessons.every((l) => completedLessons.has(l.id));
+      
+      if (allLessonsCompleted && course && !hasCertificate) {
+        const certificateUrl = generateCertificate({
+          studentName: user.user_metadata?.full_name || user.email,
+          courseName: course.title,
+          completionDate: new Date().toLocaleDateString(),
+          instructorName: course.instructor_name,
+        });
+
+        const { error } = await supabase.from("certificates").insert({
+          user_id: user.id,
+          course_id: id,
+          certificate_url: certificateUrl,
+        });
+
+        if (!error) {
+          setHasCertificate(true);
+          toast.success("Congratulations! Certificate generated!");
+          window.open(certificateUrl, "_blank");
+        }
+      }
     }
   };
 
@@ -151,54 +244,72 @@ const CourseLearn = () => {
 
         <div className="grid lg:grid-cols-4 gap-6">
           <div className="lg:col-span-3">
-            <Card className="overflow-hidden shadow-large gradient-card mb-6">
-              <div className="aspect-video bg-black">
-                <iframe
-                  src={getYouTubeEmbedUrl(currentLesson.youtube_url)}
-                  className="w-full h-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              </div>
-              <CardContent className="p-6">
-                <h2 className="text-2xl font-bold mb-2">{currentLesson.title}</h2>
-                <p className="text-muted-foreground mb-4">{currentLesson.description}</p>
-                <div className="flex items-center gap-4">
-                  {!completedLessons.has(currentLesson.id) && (
-                    <Button onClick={() => markLessonComplete(currentLesson.id)} className="bg-gradient-hero">
-                      <CheckCircle className="mr-2 h-4 w-4" />
-                      Mark as Complete
-                    </Button>
-                  )}
-                  {completedLessons.has(currentLesson.id) && (
-                    <div className="flex items-center gap-2 text-success">
-                      <CheckCircle className="h-5 w-5" />
-                      <span className="font-semibold">Completed</span>
+            {showQuiz && currentQuiz ? (
+              <QuizCard
+                quiz={currentQuiz}
+                questions={quizQuestions}
+                onComplete={handleQuizComplete}
+              />
+            ) : (
+              <>
+                <Card className="overflow-hidden shadow-large gradient-card mb-6">
+                  <div className="aspect-video bg-black">
+                    <iframe
+                      src={getYouTubeEmbedUrl(currentLesson.youtube_url)}
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                  <CardContent className="p-6">
+                    <h2 className="text-2xl font-bold mb-2">{currentLesson.title}</h2>
+                    <p className="text-muted-foreground mb-4">{currentLesson.description}</p>
+                    <div className="flex items-center gap-4">
+                      {!completedLessons.has(currentLesson.id) && (
+                        <Button onClick={() => markLessonComplete(currentLesson.id)} className="bg-gradient-hero">
+                          <CheckCircle className="mr-2 h-4 w-4" />
+                          Mark as Complete
+                        </Button>
+                      )}
+                      {completedLessons.has(currentLesson.id) && (
+                        <div className="flex items-center gap-2 text-success">
+                          <CheckCircle className="h-5 w-5" />
+                          <span className="font-semibold">Completed</span>
+                        </div>
+                      )}
+                      {hasCertificate && (
+                        <div className="flex items-center gap-2 text-primary">
+                          <Award className="h-5 w-5" />
+                          <span className="font-semibold">Certificate Earned</span>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                  </CardContent>
+                </Card>
+              </>
+            )}
 
-            <div className="flex gap-4">
-              <Button
-                variant="outline"
-                onClick={() => setCurrentLessonIndex((prev) => Math.max(0, prev - 1))}
-                disabled={currentLessonIndex === 0}
-                className="flex-1"
-              >
-                <ChevronLeft className="mr-2 h-4 w-4" />
-                Previous Lesson
-              </Button>
-              <Button
-                onClick={() => setCurrentLessonIndex((prev) => Math.min(lessons.length - 1, prev + 1))}
-                disabled={currentLessonIndex === lessons.length - 1}
-                className="flex-1 bg-gradient-hero"
-              >
-                Next Lesson
-                <ChevronRight className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
+            {!showQuiz && (
+              <div className="flex gap-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentLessonIndex((prev) => Math.max(0, prev - 1))}
+                  disabled={currentLessonIndex === 0}
+                  className="flex-1"
+                >
+                  <ChevronLeft className="mr-2 h-4 w-4" />
+                  Previous Lesson
+                </Button>
+                <Button
+                  onClick={() => setCurrentLessonIndex((prev) => Math.min(lessons.length - 1, prev + 1))}
+                  disabled={currentLessonIndex === lessons.length - 1}
+                  className="flex-1 bg-gradient-hero"
+                >
+                  Next Lesson
+                  <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="lg:col-span-1">

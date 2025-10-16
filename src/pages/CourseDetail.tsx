@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, PlayCircle, Award, Clock, BookOpen } from "lucide-react";
+import { PaystackButton } from "react-paystack";
 
 interface Course {
   id: string;
@@ -105,6 +106,52 @@ const CourseDetail = () => {
     setEnrolling(false);
   };
 
+  const handlePaymentSuccess = async (reference: any) => {
+    setEnrolling(true);
+
+    const { error: transactionError } = await supabase
+      .from("payment_transactions")
+      .insert({
+        user_id: user.id,
+        course_id: id,
+        amount: course?.price || 0,
+        status: "completed",
+        paystack_reference: reference.reference,
+        currency: "NGN",
+      });
+
+    if (transactionError) {
+      toast.error("Failed to record transaction");
+      setEnrolling(false);
+      return;
+    }
+
+    const { error: enrollmentError } = await supabase
+      .from("enrollments")
+      .insert({
+        user_id: user.id,
+        course_id: id,
+        payment_status: "completed",
+      });
+
+    if (enrollmentError) {
+      toast.error("Failed to enroll in course");
+    } else {
+      toast.success("Payment successful! You're enrolled!");
+      setIsEnrolled(true);
+      navigate("/dashboard");
+    }
+
+    setEnrolling(false);
+  };
+
+  const paystackConfig = {
+    reference: new Date().getTime().toString(),
+    email: user?.email || "",
+    amount: Math.round((course?.price || 0) * 100),
+    publicKey: "pk_test_xxxxxxxxxxxxx", // Replace with your PayStack public key
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -200,7 +247,7 @@ const CourseDetail = () => {
             <Card className="sticky top-24 gradient-card shadow-large">
               <CardContent className="p-6">
                 <div className="text-4xl font-bold text-primary mb-6">
-                  ${course.price.toFixed(2)}
+                  {course.price === 0 ? "Free" : `₦${course.price.toLocaleString()}`}
                 </div>
 
                 {isEnrolled ? (
@@ -211,7 +258,7 @@ const CourseDetail = () => {
                   >
                     Go to My Courses
                   </Button>
-                ) : (
+                ) : course?.price === 0 ? (
                   <Button
                     onClick={handleEnroll}
                     disabled={enrolling}
@@ -221,9 +268,17 @@ const CourseDetail = () => {
                     {enrolling ? (
                       <Loader2 className="h-5 w-5 animate-spin" />
                     ) : (
-                      <>Enroll Now</>
+                      <>Enroll Free</>
                     )}
                   </Button>
+                ) : (
+                  <PaystackButton
+                    {...paystackConfig}
+                    text="Enroll Now - Pay with PayStack"
+                    onSuccess={handlePaymentSuccess}
+                    onClose={() => toast.error("Payment cancelled")}
+                    className="w-full mb-4 bg-gradient-hero h-11 rounded-md text-sm font-medium px-8 inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                  />
                 )}
 
                 <div className="space-y-4 text-sm">
