@@ -10,11 +10,21 @@ import { toast } from "sonner";
 import { GraduationCap, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
+import countryList from 'react-select-country-list';
+
+const countries = countryList().getData();
+
 const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState('');
+  const [city, setCity] = useState('');
+  const [state, setState] = useState(''); // avoid reserved word
+  const [country, setCountry] = useState('Nigeria'); // default
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const defaultTab = searchParams.get("tab") || "signin";
@@ -51,21 +61,26 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           full_name: fullName,
+          phone,
+          city,
+          state,
+          country,
         },
-        emailRedirectTo: `${window.location.origin}/`,
+        emailRedirectTo: `${window.location.origin}/dashboard`,
       },
     });
 
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success("Account created! Redirecting to dashboard...");
+      toast.success("Account created successfully! Please verify your email.");
+      console.log("User metadata:", data);
       navigate("/dashboard");
     }
     setLoading(false);
@@ -125,6 +140,7 @@ const Auth = () => {
 
               <TabsContent value="signup">
                 <form onSubmit={handleSignUp} className="space-y-4">
+                  {/* Full Name */}
                   <div className="space-y-2">
                     <Label htmlFor="signup-name">Full Name</Label>
                     <Input
@@ -136,6 +152,61 @@ const Auth = () => {
                       required
                     />
                   </div>
+
+                  {/* Phone Number */}
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-phone">Phone Number</Label>
+                    <PhoneInput
+                      country={"ng"}
+                      value={phone}
+                      onChange={setPhone}
+                      inputStyle={{ width: "100%" }}
+                      inputProps={{ required: true }}
+                    />
+                  </div>
+
+                  {/* City, State, Country */}
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="city">City</Label>
+                      <Input
+                        id="city"
+                        type="text"
+                        placeholder="Ikeja"
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="state">State</Label>
+                      <Input
+                        id="state"
+                        type="text"
+                        placeholder="Lagos"
+                        value={state}
+                        onChange={(e) => setState(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="country">Country</Label>
+                      <select
+                        id="country"
+                        className="border rounded-md p-2 w-full"
+                        value={country}
+                        onChange={(e) => setCountry(e.target.value)}
+                        required
+                      >
+                        <option value="">Select Country</option>
+                        {countries.map((c) => (
+                          <option key={c.value} value={c.label}>
+                            {c.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Email */}
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
                     <Input
@@ -147,6 +218,8 @@ const Auth = () => {
                       required
                     />
                   </div>
+
+                  {/* Password */}
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">Password</Label>
                     <Input
@@ -159,6 +232,7 @@ const Auth = () => {
                       minLength={6}
                     />
                   </div>
+
                   <Button type="submit" className="w-full bg-gradient-hero" disabled={loading}>
                     {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Account"}
                   </Button>

@@ -37,7 +37,7 @@ export const CourseGrid = () => {
     setLoading(false);
   };
 
-  const categories = ["all", "Cybersecurity", "DevOps", "Web Development", "Cloud Computing", "Data Science"];
+  const categories = ["all", "Cybersecurity", "DevOps", "Web Development", "Cloud Computing", "Python"];
 
   const filteredCourses = selectedCategory === "all" 
     ? courses 

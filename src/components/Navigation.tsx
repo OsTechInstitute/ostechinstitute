@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
+import logo from "@/assets/logo.png";
 export const Navigation = () => {
   const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -60,11 +60,14 @@ export const Navigation = () => {
   return (
     <nav className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50 shadow-soft">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-          <GraduationCap className="h-8 w-8 text-primary" />
-          <span className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-            LearnHub
-          </span>
+        <Link to="/" className="flex items-center hover:opacity-80">
+          <div className="p-1 rounded-md bg-black">
+            <img
+              src="/logo.png"
+              alt="OsTech Institute Logo"
+              className="h-10 w-auto object-contain dark:invert-0 dark:brightness-100 dark:contrast-100"
+            />
+          </div>
         </Link>
 
         <div className="flex items-center gap-4">

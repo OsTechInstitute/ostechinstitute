@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AIChat } from "@/components/AIChat.tsx";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import CourseDetail from "./pages/CourseDetail";
@@ -14,6 +15,11 @@ import AdminCourses from "./pages/admin/AdminCourses";
 import AdminStudents from "./pages/admin/AdminStudents";
 import AdminCertificates from "./pages/admin/AdminCertificates";
 import Certificates from "./pages/Certificates";
+import AboutUs from "./pages/AboutUs.tsx";
+import Contact from "./pages/Contact.tsx";
+import PrivacyPolicy from "./pages/PrivacyPolicy.tsx";
+import TermsOfService from "./pages/TermsOfService";
+import HelpCenter from "./pages/HelpCenter.tsx";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +29,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <AIChat />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
@@ -31,6 +38,11 @@ const App = () => (
           <Route path="/course/:id/learn" element={<CourseLearn />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/certificates" element={<Certificates />} />
+          <Route path="/about" element={<AboutUs />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/help" element={<HelpCenter />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="courses" element={<AdminCourses />} />

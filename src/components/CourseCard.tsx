@@ -72,7 +72,7 @@ export const CourseCard = ({
       </CardContent>
       <CardFooter className="px-6 pb-6 pt-0 flex items-center justify-between">
         <div className="text-2xl font-bold text-primary">
-          ${price.toFixed(2)}
+          {new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN" }).format(price)}
         </div>
         <Button className="rounded-full bg-gradient-hero hover:opacity-90 transition-opacity">
           View Course

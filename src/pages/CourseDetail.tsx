@@ -149,7 +149,7 @@ const CourseDetail = () => {
     reference: new Date().getTime().toString(),
     email: user?.email || "",
     amount: Math.round((course?.price || 0) * 100),
-    publicKey: "pk_test_xxxxxxxxxxxxx", // Replace with your PayStack public key
+    publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY, // Replace with your PayStack public key
   };
 
   if (loading) {
