@@ -15,4 +15,8 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  preview: {
+    allowedHosts: ['ostechinstitute.onrender.com'],
+    port: 4173,
+  },
 }));
