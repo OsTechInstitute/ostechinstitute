@@ -16,7 +16,8 @@ export default defineConfig(({ mode }) => ({
     },
   },
   preview: {
-    allowedHosts: ['ostechinstitute.onrender.com'],
+    allowedHosts: ['ostechinstitute.onrender.com'], // ✅ fixed
+    host: '0.0.0.0', // ✅ required for Render
     port: 4173,
   },
 }));
