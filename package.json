@@ -9,7 +9,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "vite preview --port 10000 --host 0.0.0.0"
+    "start": "vite preview --port $PORT --host 0.0.0.0"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -86,6 +86,6 @@
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.38.0",
-    "vite": "^5.4.19"
+    "vite": "^5.4.21"
   }
 }
