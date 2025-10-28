@@ -5,21 +5,21 @@ import { Card, CardContent } from "@/components/ui/card";
 export const Testimonials = () => {
   const testimonials = [
     {
-      name: "Sarah Johnson",
+      name: "Amina Yusuf",
       role: "Full Stack Developer",
-      content: "LearnHub transformed my career. The Cybersecurity course gave me the skills I needed to land my dream job. The instructors are incredibly knowledgeable!",
+      content: "OsTech Institute transformed my career. The Cybersecurity course gave me the skills I needed to land my dream job. The instructors are incredibly knowledgeable!",
       rating: 5,
       initials: "SJ"
     },
     {
-      name: "Michael Chen",
+      name: "Kwame Mensah",
       role: "DevOps Engineer",
       content: "The DevOps course is outstanding! Practical, hands-on lessons that I could apply immediately. The certificate helped boost my professional credibility.",
       rating: 5,
       initials: "MC"
     },
     {
-      name: "Emma Williams",
+      name: "Zanele Dlamini",
       role: "Web Developer",
       content: "Best online learning platform I've used. The Web Development course is comprehensive and the video quality is excellent. Highly recommend!",
       rating: 5,
