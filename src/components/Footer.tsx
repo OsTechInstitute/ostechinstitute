@@ -9,7 +9,7 @@ export const Footer = () => {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <BookOpen className="h-6 w-6 text-primary" />
-              <span className="text-xl font-bold">LearnHub</span>
+              <span className="text-xl font-bold">OsTech Institute</span>
             </div>
             <p className="text-muted-foreground mb-4">
               Empowering tech learners worldwide with expert-led courses and industry-recognized certificates.
@@ -62,7 +62,7 @@ export const Footer = () => {
         </div>
 
         <div className="border-t pt-8 text-center text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} LearnHub. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} OsTech Institute. All rights reserved.</p>
         </div>
       </div>
     </footer>
