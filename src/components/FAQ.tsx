@@ -8,7 +8,7 @@ import {
 export const FAQ = () => {
   const faqs = [
     {
-      question: "How do I get started with LearnHub?",
+      question: "How do I get started with OsTech Institute?",
       answer: "Simply create a free account, browse our course catalog, and enroll in the courses that interest you. You can start learning immediately after enrollment!"
     },
     {
